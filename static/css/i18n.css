@@ -1,0 +1,112 @@
+/* ============================================================
+   ONI Mod Manager - i18n Language Switcher Styles
+   ============================================================ */
+.lang-switcher {
+  position: relative;
+  margin-top: 8px;
+}
+
+.lang-switcher-btn {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lang-switcher-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+.lang-menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 4px 0;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.lang-menu-item {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lang-menu-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.lang-menu-item.active {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Pagination Styles
+   ============================================================ */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px 0 4px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.pagination-btn.active {
+  background: var(--accent-cyan-dim);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pagination-info {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 0 8px;
+}

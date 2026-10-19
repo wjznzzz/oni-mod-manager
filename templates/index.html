@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缺氧(ONI) 创意工坊模组下载与搬运工具</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/i18n.css">
+</head>
+<body>
+    <!-- ============================================================
+         Sidebar
+         ============================================================ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">ONI Mod Manager</div>
+            <div class="logo-sub">缺氧创意工坊模组管理</div>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-page="workshop">
+                <span class="nav-icon">&#9883;</span> <span data-i18n="nav.workshop">创意工坊</span>
+            </button>
+            <button class="nav-item" data-page="downloads">
+                <span class="nav-icon">&#8595;</span> <span data-i18n="nav.downloads">下载管理</span>
+                <span class="nav-badge hidden" id="download-badge">0</span>
+            </button>
+            <button class="nav-item" data-page="local">
+                <span class="nav-icon">&#9776;</span> <span data-i18n="nav.local">本地模组库</span>
+            </button>
+            <button class="nav-item" data-page="wegame">
+                <span class="nav-icon">&#9733;</span> <span data-i18n="nav.wegame">WeGame管理</span>
+            </button>
+            <button class="nav-item" data-page="settings">
+                <span class="nav-icon">&#9881;</span> <span data-i18n="nav.settings">设置</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="version">v{{ version }}</div>
+            <div>缺氧 Mod Manager</div>
+        </div>
+    </aside>
+
+    <!-- ============================================================
+         Main Content Area
+         ============================================================ -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <div class="content-header" id="content-header">
+            <h2 id="page-title" data-i18n="page.workshop">创意工坊</h2>
+            <div class="search-box" id="search-container">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" id="search-input" data-i18n-placeholder="search.placeholder" placeholder="搜索缺氧模组..." />
+            </div>
+            <div class="filter-group" id="filter-container">
+                <select id="sort-select">
+                    <option value="popular" data-i18n-value="sort.popular">按热度</option>
+                    <option value="newest" data-i18n-value="sort.newest">按最新</option>
+                    <option value="rating" data-i18n-value="sort.rating">按评分</option>
+                </select>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="toggle-view" title="&#9776;">&#9776;</button>
+        </div>
+
+        <!-- Body -->
+        <div class="content-body" id="content-body">
+            <div class="content-list" id="content-list">
+                <!-- Page: Workshop -->
+                <div id="page-workshop" class="page-content active">
+                    <div class="filter-tags mb-8" id="category-tags">
+                        <span class="filter-tag active" data-category="" data-i18n="cat.all">全部</span>
+                        <span class="filter-tag" data-category="功能" data-i18n="cat.functional">功能类</span>
+                        <span class="filter-tag" data-category="美化" data-i18n="cat.cosmetic">美化类</span>
+                        <span class="filter-tag" data-category="建筑" data-i18n="cat.building">建筑类</span>
+                        <span class="filter-tag" data-category="玩法" data-i18n="cat.gameplay">玩法类</span>
+                        <span class="filter-tag" data-category="工具" data-i18n="cat.tool">工具类</span>
+                    </div>
+                    <div id="workshop-apikey-banner" class="hidden" style="padding:12px;margin-bottom:12px;background:var(--accent-orange);background:linear-gradient(135deg,rgba(255,140,0,0.15),rgba(255,140,0,0.05));border:1px solid rgba(255,140,0,0.3);border-radius:var(--radius);font-size:13px;color:var(--accent-orange);" data-i18n-html="workshop.apikey_banner">
+                        未配置 Steam API Key，当前显示热门推荐。请在<a href="https://steamcommunity.com/dev/apikey" target="_blank" style="color:var(--accent-cyan);">steamcommunity.com/dev/apikey</a> 获取免费 Key，并在设置中填入后即可搜索真实模组。
+                    </div>
+                    <div id="workshop-mods" class="mod-grid"></div>
+                    <div id="workshop-pagination" class="pagination hidden"></div>
+                    <div class="loading hidden" id="workshop-loading"><span class="spinner"></span> <span data-i18n="workshop.loading">搜索模组中...</span></div>
+                    <div class="empty-state hidden" id="workshop-empty">
+                        <div class="empty-icon">&#128269;</div>
+                        <div data-i18n="workshop.empty">未找到模组</div>
+                        <div class="text-dim" data-i18n="workshop.empty_hint">尝试换个关键词，或检查网络连接</div>
+                    </div>
+                    <div id="workshop-notice" class="hidden" style="padding:12px;margin-top:8px;background:var(--accent-cyan-dim);border-radius:var(--radius);font-size:12px;color:var(--accent-cyan);"></div>
+                </div>
+
+                <!-- Page: Downloads -->
+                <div id="page-downloads" class="page-content hidden">
+                    <div class="download-panel">
+                        <!-- Active Downloads -->
+                        <div class="download-section">
+                            <h3 data-i18n="dl.active">正在下载</h3>
+                            <div id="download-active"></div>
+                        </div>
+                        <!-- Queued -->
+                        <div class="download-section">
+                            <h3 data-i18n="dl.queued">等待中</h3>
+                            <div id="download-queue"></div>
+                        </div>
+                        <!-- Completed -->
+                        <div class="download-section">
+                            <div class="flex-between mb-8">
+                                <h3 data-i18n="dl.completed">已完成</h3>
+                                <button class="btn btn-ghost btn-sm" onclick="clearDownloadHistory()" data-i18n="dl.clear_history">清空记录</button>
+                            </div>
+                            <div id="download-completed"></div>
+                        </div>
+                        <!-- Failed -->
+                        <div class="download-section">
+                            <h3 data-i18n="dl.failed">下载失败</h3>
+                            <div id="download-failed"></div>
+                        </div>
+                    </div>
+                    <div class="empty-state hidden" id="downloads-empty">
+                        <div class="empty-icon">&#8595;</div>
+                        <div data-i18n="dl.empty">暂无下载任务</div>
+                        <div class="text-dim" data-i18n="dl.empty_hint">在创意工坊中浏览模组并点击下载</div>
+                    </div>
+                </div>
+
+                <!-- Page: Local Mods -->
+                <div id="page-local" class="page-content hidden">
+                    <div id="local-mods" class="mod-grid"></div>
+                    <div class="loading hidden" id="local-loading"><span class="spinner"></span> <span data-i18n="local.loading">加载中...</span></div>
+                    <div class="empty-state hidden" id="local-empty">
+                        <div class="empty-icon">&#9776;</div>
+                        <div data-i18n="local.empty">本地模组库为空</div>
+                        <div class="text-dim" data-i18n="local.empty_hint">在创意工坊下载模组，或手动导入模组压缩包</div>
+                    </div>
+                </div>
+
+                <!-- Page: WeGame -->
+                <div id="page-wegame" class="page-content hidden">
+                    <div class="transfer-panel" id="transfer-panel">
+                        <!-- Local Side -->
+                        <div class="transfer-column">
+                            <div class="transfer-column-header">&#9776; <span data-i18n="wegame.local">本地模组</span></div>
+                            <div class="transfer-column-body" id="wegame-local-list"></div>
+                        </div>
+                        <!-- Arrow -->
+                        <div class="transfer-arrow">
+                            <div class="transfer-arrow-icon">&#10132;</div>
+                            <button class="btn btn-orange btn-sm" onclick="deploySelectedMods()" data-i18n="wegame.deploy">一键搬运</button>
+                            <button class="btn btn-ghost btn-sm" onclick="refreshWeGamePage()" data-i18n="wegame.refresh">刷新</button>
+                        </div>
+                        <!-- WeGame Side -->
+                        <div class="transfer-column">
+                            <div class="transfer-column-header">&#9733; <span data-i18n="wegame.installed">WeGame已安装</span></div>
+                            <div class="transfer-column-body" id="wegame-installed-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Settings -->
+                <div id="page-settings" class="page-content hidden">
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <h3 data-i18n="settings.paths">路径设置</h3>
+                            <div class="settings-row">
+                                <label data-i18n="settings.game_dir">WeGame游戏目录</label>
+                                <input type="text" id="set-game-dir" placeholder="自动检测中..." />
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.mods_dir">WeGame Mods目录</label>
+                                <input type="text" id="set-mods-dir" placeholder="自动检测中..." />
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.download_dir">下载缓存目录</label>
+                                <input type="text" id="set-download-dir" />
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.local_dir">本地模组库</label>
+                                <input type="text" id="set-local-dir" />
+                            </div>
+                            <button class="btn btn-primary btn-sm mt-8" onclick="detectWeGamePaths()" data-i18n="settings.auto_detect">自动检测路径</button>
+                        </div>
+                        <div class="settings-card">
+                            <h3 data-i18n="settings.download">下载设置</h3>
+                            <div class="settings-row">
+                                <label data-i18n="settings.dl_source">首选下载源</label>
+                                <select id="set-download-source">
+                                    <option value="steam_cdn" data-i18n-value="settings.dl_source.steam">Steam CDN直连</option>
+                                    <option value="third_party" data-i18n-value="settings.dl_source.third">第三方下载站</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.max_threads">最大同时下载数</label>
+                                <select id="set-max-threads">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.proxy">代理设置</label>
+                                <input type="text" id="set-proxy" placeholder="http://127.0.0.1:7890" />
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <h3 data-i18n="settings.steam_api">Steam API</h3>
+                            <div class="settings-row">
+                                <label data-i18n="settings.apikey">Steam Web API Key</label>
+                                <input type="text" id="set-apikey" data-i18n-placeholder="settings.apikey_placeholder" placeholder="粘贴 API Key，免费获取: steamcommunity.com/dev/apikey" />
+                            </div>
+                            <div class="text-dim" style="font-size:11px;margin-top:4px;" data-i18n-html="settings.apikey_hint">登录 Steam 账号后访问 <a href="https://steamcommunity.com/dev/apikey" target="_blank" style="color:var(--accent-cyan);">steamcommunity.com/dev/apikey</a> 免费获取，填入后即可搜索真实模组。</div>
+                        </div>
+                        <div class="settings-card">
+                            <h3 data-i18n="settings.ui">界面设置</h3>
+                            <div class="settings-row">
+                                <label data-i18n="settings.notify">启用下载通知</label>
+                                <label class="toggle"><input type="checkbox" id="set-notify" checked /><span class="toggle-slider"></span></label>
+                            </div>
+                            <div class="settings-row">
+                                <label data-i18n="settings.auto_update">自动检查更新</label>
+                                <label class="toggle"><input type="checkbox" id="set-auto-update" checked /><span class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <h3 data-i18n="settings.actions">操作</h3>
+                            <button class="btn btn-primary btn-block mb-8" onclick="saveAllSettings()" data-i18n="settings.save">保存设置</button>
+                            <button class="btn btn-ghost btn-block" onclick="resetSettings()" data-i18n="settings.reset">恢复默认设置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Panel -->
+            <div class="content-detail" id="detail-panel">
+                <div class="detail-header">
+                    <h3 data-i18n="detail.title">模组详情</h3>
+                    <button class="detail-close" onclick="closeDetail()" title="&times;">&times;</button>
+                </div>
+                <!-- Empty state -->
+                <div class="detail-empty" id="detail-empty">
+                    <div class="empty-icon">&#9883;</div>
+                    <div data-i18n="detail.empty">选择一个模组查看详情</div>
+                </div>
+                <!-- Detail content -->
+                <div class="detail-content" id="detail-content">
+                    <img class="detail-preview" id="detail-preview" src="" data-i18n-alt="detail.alt" alt="预览图" onerror="this.style.display='none'" />
+                    <div class="detail-info">
+                        <div class="detail-info-row">
+                            <span class="detail-info-label" data-i18n="detail.name">名称</span>
+                            <span class="detail-info-value" id="detail-name">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label" data-i18n="detail.author">作者</span>
+                            <span class="detail-info-value" id="detail-author">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label" data-i18n="detail.subs">订阅数</span>
+                            <span class="detail-info-value" id="detail-subs">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label" data-i18n="detail.version">版本</span>
+                            <span class="detail-info-value" id="detail-version">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label" data-i18n="detail.size">大小</span>
+                            <span class="detail-info-value" id="detail-size">-</span>
+                        </div>
+                        <div>
+                            <span class="detail-info-label" data-i18n="detail.description">描述</span>
+                            <button class="btn-translate" id="btn-translate-desc" onclick="translateDescription()" style="display:none" title="翻译模组介绍">🌐 翻译</button>
+                            <div class="detail-desc" id="detail-desc">-</div>
+                            <div class="detail-desc-translated" id="detail-desc-translated" style="display:none"></div>
+                        </div>
+                        <div class="detail-actions" id="detail-actions"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="status-left" data-i18n="status.ready">就绪</span>
+            <span id="status-right"></span>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="import-file-input" accept=".zip,.rar,.7z" style="display:none" onchange="handleFileImport(event)" />
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/i18n.js"></script>
+</body>
+</html>

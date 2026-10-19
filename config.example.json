@@ -1,0 +1,18 @@
+{
+  "download_dir": "C:\\Users\\<用户名>\\Documents\\Klei\\OxygenNotIncludedTGP\\mods\\local",
+  "mods_dir": "C:\\Users\\<用户名>\\Documents\\ONIModManager\\mods",
+  "wegame_game_dir": "",
+  "wegame_mods_dir": "C:\\Users\\<用户名>\\Documents\\Klei\\OxygenNotIncludedTGP\\mods\\local",
+  "wegame_mods_json": "C:\\Users\\<用户名>\\Documents\\Klei\\OxygenNotIncludedTGP\\mods.json",
+  "preferred_download_source": "steam_cdn",
+  "allow_third_party_sources": false,
+  "theme": "dark",
+  "language": "zh",
+  "proxy": "",
+  "max_download_threads": 3,
+  "auto_check_update": true,
+  "notification_enabled": true,
+  "steam_api_key": "",
+  "baidu_app_id": "",
+  "baidu_secret_key": ""
+}
