@@ -31,6 +31,8 @@
 - **网络抖动导致界面变假数据**：Steam 接口请求改为带重试（对连接异常与 429/5xx 退避重试，整体 20 秒预算），避免偶发丢包就把创意工坊整个降级成示例数据。
 - **降级提示不再撒谎**：连不上时提示「创意工坊接口暂时连不上（具体原因）」而不是一律「未配置 Steam API Key」，并把 `error` 一并返回。
 - 预览图候选名补充 `thumbnail.png` / `screen1.png` / `screen.png`（不少模组没放 `preview.png`）。
+- **接口冷启动慢**：改用 `requests.Session` 复用连接（Steam 接口从 12~15 秒降到 0.3 秒）。
+- **下载易被丢包打断**：下载前对直链请求重试 3 次；直链解析复用 `SteamWorkshopAPI.resolve_file_url`，不再维护第二份实现。
 
 ### 变更
 - 硬编码密钥全部移除：Steam API Key、百度翻译 appid/secret 改由 `config.json` / `.env` 提供。
