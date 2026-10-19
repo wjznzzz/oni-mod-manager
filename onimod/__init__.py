@@ -7,7 +7,7 @@ from flask_cors import CORS
 
 from .config import BASE_DIR, ensure_dirs
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 
 def create_app() -> Flask:

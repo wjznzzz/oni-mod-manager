@@ -3,11 +3,11 @@
 > 给 **WeGame / Epic / 离线版《缺氧》** 玩家用的创意工坊模组获取与管理工具：
 > 在线搜索 Steam 创意工坊 → 下载 → 一键搬运进 WeGame 版《缺氧》。
 
-> **当前版本：v1.1.0**（重构版，接口与 v1.0.0 完全一致，详见 [CHANGELOG](CHANGELOG.md)）
+> **当前版本：v1.1.1**（重构版，接口与 v1.0.0 完全一致，详见 [CHANGELOG](CHANGELOG.md)）
 
 [English README](README.en.md) · [更新日志](CHANGELOG.md) · [申请 Steam Web API Key](docs/steam-api-key.md)
 
-**📦 直接下载：[最新版 v1.1.0 zip](https://github.com/wjznzzz/oni-mod-manager/releases/latest)**（免安装，解压后双击 `install.bat`）
+**📦 直接下载：[最新版 v1.1.1 zip](https://github.com/wjznzzz/oni-mod-manager/releases/latest)**（免安装，解压后双击 `install.bat`）
 
 <!-- 界面截图：docs/screenshot.png -->
 ![界面预览](docs/screenshot.png)
@@ -162,4 +162,12 @@ pyinstaller -F -n ONIModManager --add-data "templates;templates" --add-data "sta
 
 ## 许可
 
-[MIT](LICENSE)
+**PolyForm Noncommercial License 1.0.0** —— 非商业许可：**可以随便用、随便改、随便传，但不许商用倒卖。**
+
+| | |
+|---|---|
+| ✅ **允许** | 自己使用；修改、二次开发；原样或改过后再分发（保留许可与署名）；发教程、录视频、做整合包（不收费）；教学、科研、公益组织使用 |
+| ❌ **禁止** | 卖钱、倒卖、收费分发、付费墙后提供、捆绑进付费产品或服务、公司内部用于商业经营 |
+| 💬 **想商用** | 开 [Issue](https://github.com/wjznzzz/oni-mod-manager/issues) 找作者单独授权 |
+
+完整条款见 [LICENSE](LICENSE)（[官方原文](https://polyformproject.org/licenses/noncommercial/1.0.0)）。

@@ -3,11 +3,11 @@
 > A mod manager for **Oxygen Not Included** players on **WeGame / Epic / offline** builds:
 > search the Steam Workshop, download, and one-click deploy into your WeGame copy of ONI.
 
-> **Current version: v1.1.0** (refactored; HTTP API unchanged from v1.0.0 — see [Changelog](CHANGELOG.md))
+> **Current version: v1.1.1** (refactored; HTTP API unchanged from v1.0.0 — see [Changelog](CHANGELOG.md))
 
 [中文说明](README.md) · [Changelog](CHANGELOG.md) · [Get a Steam Web API Key](docs/steam-api-key.md)
 
-**📦 Download: [latest v1.1.0 zip](https://github.com/wjznzzz/oni-mod-manager/releases/latest)** (portable — unzip and run `install.bat`)
+**📦 Download: [latest v1.1.1 zip](https://github.com/wjznzzz/oni-mod-manager/releases/latest)** (portable — unzip and run `install.bat`)
 
 ![Screenshot](docs/screenshot.png)
 
@@ -73,4 +73,10 @@ STEAM_WEB_API_KEY=your_key
 
 ## License
 
-[MIT](LICENSE)
+**PolyForm Noncommercial License 1.0.0** — free to use, modify and share, but **no commercial use or resale**.
+
+- ✅ Allowed: personal use, modification, forks, redistribution (keep this license and notice), tutorials/videos/mod packs at no charge, teaching, research, nonprofits
+- ❌ Not allowed: selling, reselling, paid distribution, paywalled hosting, bundling into a paid product or service, use in a for-profit business
+- 💬 Commercial license: open an [issue](https://github.com/wjznzzz/oni-mod-manager/issues) to ask the author
+
+Full terms in [LICENSE](LICENSE) ([official text](https://polyformproject.org/licenses/noncommercial/1.0.0)).
