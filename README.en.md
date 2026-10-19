@@ -7,6 +7,8 @@
 
 [中文说明](README.md) · [Changelog](CHANGELOG.md) · [Get a Steam Web API Key](docs/steam-api-key.md)
 
+**📦 Download: [latest v1.1.0 zip](https://github.com/wjznzzz/oni-mod-manager/releases/latest)** (portable — unzip and run `install.bat`)
+
 ![Screenshot](docs/screenshot.png)
 
 ---
