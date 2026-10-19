@@ -18,6 +18,11 @@ from .config import load_config, secret
 
 ONI_APP_ID = 457140
 
+# 复用连接：本机网络新建连接偶发丢包，每次重新握手会让接口慢到十几秒
+_SESSION = requests.Session()
+_SESSION.mount("https://", requests.adapters.HTTPAdapter(pool_connections=8, pool_maxsize=16))
+_SESSION.mount("http://", requests.adapters.HTTPAdapter(pool_connections=8, pool_maxsize=16))
+
 
 class SteamWorkshopAPI:
     """Steam 创意工坊 API 封装。"""
@@ -65,7 +70,7 @@ class SteamWorkshopAPI:
         for attempt in range(attempts):
             try:
                 budget = max(2.0, min(timeout, max_total - (time.time() - started)))
-                resp = requests.request(method, url, params=params, data=data,
+                resp = _SESSION.request(method, url, params=params, data=data,
                                         headers=merged, timeout=budget, proxies=proxies)
                 if resp.status_code != 429 and resp.status_code < 500:
                     return resp
