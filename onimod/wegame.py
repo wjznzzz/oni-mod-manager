@@ -39,6 +39,18 @@ def _mods_json_path(config=None) -> Path:
     return mods_dir.parent / "mods.json"
 
 
+def _mods_local_dir(config=None) -> Path:
+    """WeGame 真正读取模组的目录：``…\\mods\\local``。
+
+    游戏只扫 ``mods\\local\\<id>\\``。所以即使配置指向 ``…\\mods``，
+    搬运也要落到它下面的 ``local`` 子目录（不存在则新建），
+    否则模组会铺在 ``mods\\<id>``，游戏里显示「未找到兼容」。
+    """
+    config = config or load_config()
+    base = Path(config["wegame_mods_dir"])
+    return base if base.name.lower() == "local" else base / "local"
+
+
 def _match_id(entry: dict):
     """从 mods.json 条目里取标识（兼容简化格式与 WeGame 原版格式）。"""
     return (entry.get("modId")
@@ -56,11 +68,12 @@ class WeGameModManager:
             "detected": False,
         }
 
-        # 模组实际存放在 mods\local 下
-        for candidate in (DOCUMENTS / "Klei" / "OxygenNotIncludedTGP" / "mods" / "local",
-                          DOCUMENTS / "Klei" / "OxygenNotIncludedTGP" / "mods"):
+        # 模组实际存放在 mods\local 下；只有 mods 存在时也指向 mods\local（搬运时自动新建）
+        klei_mods = DOCUMENTS / "Klei" / "OxygenNotIncludedTGP" / "mods"
+        for candidate in (klei_mods / "local", klei_mods):
             if candidate.exists():
-                paths["wegame_mods_dir"] = str(candidate)
+                paths["wegame_mods_dir"] = str(
+                    candidate if candidate.name.lower() == "local" else candidate / "local")
                 paths["detected"] = True
                 break
 
@@ -79,8 +92,13 @@ class WeGameModManager:
 
     @staticmethod
     def get_installed_mods() -> list:
-        mods_dir = Path(load_config()["wegame_mods_dir"])
-        mods_json_path = _mods_json_path()
+        config = load_config()
+        mods_dir = _mods_local_dir(config)
+        if not mods_dir.exists():
+            base = Path(config["wegame_mods_dir"])
+            if base.exists():
+                mods_dir = base  # 兼容老版本把模组铺在 mods\ 下的情况
+        mods_json_path = _mods_json_path(config)
 
         enabled = set()
         if mods_json_path.exists():
@@ -130,8 +148,8 @@ class WeGameModManager:
         if not local_dir.exists():
             return {"success": False, "error": f"本地模组 {mod_id} 不存在"}
 
-        wegame_dir = Path(config["wegame_mods_dir"])
-        wegame_dir.mkdir(parents=True, exist_ok=True)
+        wegame_dir = _mods_local_dir(config)
+        wegame_dir.mkdir(parents=True, exist_ok=True)  # 首次搬运时自动建 mods\local
         target_dir = wegame_dir / str(mod_id)
 
         if target_dir.exists() and not force:
@@ -194,7 +212,10 @@ class WeGameModManager:
     def uninstall_mod(mod_id):
         """从 WeGame 目录卸载，并同步清理 mods.json 条目。"""
         config = load_config()
-        mod_dir = Path(config["wegame_mods_dir"]) / str(mod_id)
+        mod_dir = _mods_local_dir(config) / str(mod_id)
+        if not mod_dir.exists():
+            alt = Path(config["wegame_mods_dir"]) / str(mod_id)
+            mod_dir = alt if alt.exists() else mod_dir
         if not mod_dir.exists():
             return {"success": False, "error": "模组不存在"}
 

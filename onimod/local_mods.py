@@ -11,7 +11,8 @@ from pathlib import Path
 from .config import load_config
 from .utils import dir_size
 
-_PREVIEW_NAMES = ("preview.png", "preview.jpg", "icon.png", "icon.jpg")
+_PREVIEW_NAMES = ("preview.png", "preview.jpg", "icon.png", "icon.jpg",
+                  "thumbnail.png", "screen1.png", "screen.png")
 
 
 class LocalModManager:
@@ -36,24 +37,59 @@ class LocalModManager:
         return sorted(mods, key=lambda x: x.get("mod_time", ""), reverse=True)
 
     @staticmethod
+    def _parse_flat_yaml(path: Path) -> dict:
+        """解析缺氧 mod 的扁平 ``key: value`` 文件（mod.yaml / mod_info.yaml）。
+
+        游戏写出的 ``mod.yaml`` 常带 UTF-8 BOM，必须用 ``utf-8-sig`` 读，
+        否则第一行的 ``title`` 永远匹配不上（列表里就只剩文件夹 ID）。
+        """
+        data = {}
+        try:
+            for raw in path.read_text(encoding="utf-8-sig").splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or ":" not in line:
+                    continue
+                key, value = line.split(":", 1)
+                data[key.strip()] = value.strip().strip('"').strip("'")
+        except OSError:
+            pass
+        return data
+
+    @staticmethod
     def read_mod_info(mod_dir) -> dict:
-        """读取 ``mod_info.yaml`` / ``mod_info.json`` 与预览图。"""
+        """读取 ``mod.yaml`` / ``mod_info.yaml`` / ``mod_info.json`` 与预览图。
+
+        缺氧的元数据是分开的：标题/描述/作者在 ``mod.yaml``，
+        版本与 API 号在 ``mod_info.yaml``，两处都要读。
+        """
         mod_dir = Path(mod_dir)
         info = {"id": mod_dir.name}
 
+        # ① mod.yaml —— 标题、描述、作者
+        mod_yaml = mod_dir / "mod.yaml"
+        if mod_yaml.exists():
+            meta = LocalModManager._parse_flat_yaml(mod_yaml)
+            if meta.get("title"):
+                info["title"] = meta["title"]
+            if meta.get("description"):
+                info["description"] = meta["description"][:200]
+            if meta.get("author"):
+                info["author"] = meta["author"]
+            if meta.get("version"):
+                info["version"] = meta["version"]
+
+        # ② mod_info.yaml —— 版本号 / staticID（优先级高于 mod.yaml 的同名字段）
         yaml_path = mod_dir / "mod_info.yaml"
         if yaml_path.exists():
-            try:
-                for raw in yaml_path.read_text(encoding="utf-8").splitlines():
-                    line = raw.strip()
-                    for field, key in (("title", "title"), ("description", "description"),
-                                       ("version", "version"), ("staticID", "static_id"),
-                                       ("author", "author")):
-                        if line.startswith(field + ":") or line.startswith(field + " "):
-                            value = line.split(":", 1)[-1].strip().strip('"').strip("'")
-                            info[key] = value[:200] if key == "description" else value
-            except OSError:
-                pass
+            tech = LocalModManager._parse_flat_yaml(yaml_path)
+            if tech.get("title"):
+                info.setdefault("title", tech["title"])
+            if tech.get("version"):
+                info["version"] = tech["version"]
+            if tech.get("staticID"):
+                info.setdefault("static_id", tech["staticID"])
+            if tech.get("author"):
+                info.setdefault("author", tech["author"])
 
         json_path = mod_dir / "mod_info.json"
         if json_path.exists():

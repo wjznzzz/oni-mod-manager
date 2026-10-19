@@ -24,6 +24,14 @@
 - **mods.json 路径写死**：改为跟随 `config.wegame_mods_dir` 推导。
 - 预览图 MIME 类型不再一律当成 PNG。
 
+### 修复（2026-10-19 实机联调，WeGame + 真实 API Key 环境）
+
+- **模组名显示成文件夹 ID**：缺氧把 `title` / `description` / `author` 写在 `mod.yaml`（`mod_info.yaml` 只有版本与 API 号），原实现只读 `mod_info.yaml`；且 `mod.yaml` 常带 UTF-8 BOM，`startswith("title:")` 匹配不到。现两处都读，并按 `utf-8-sig` 解码。
+- **搬运目标目录**：游戏只扫 `…\mods\local\<id>\`。当配置指向 `…\mods` 时，搬运会把模组铺在 `mods\<id>`（游戏里显示「未找到兼容」）。现统一落到 `mods\local`，目录不存在则自动新建；安装/卸载同样按此解析（并兼容老版本铺错的位置）。
+- **网络抖动导致界面变假数据**：Steam 接口请求改为带重试（对连接异常与 429/5xx 退避重试，整体 20 秒预算），避免偶发丢包就把创意工坊整个降级成示例数据。
+- **降级提示不再撒谎**：连不上时提示「创意工坊接口暂时连不上（具体原因）」而不是一律「未配置 Steam API Key」，并把 `error` 一并返回。
+- 预览图候选名补充 `thumbnail.png` / `screen1.png` / `screen.png`（不少模组没放 `preview.png`）。
+
 ### 变更
 - 硬编码密钥全部移除：Steam API Key、百度翻译 appid/secret 改由 `config.json` / `.env` 提供。
 - `config.json` 与下载历史不再进仓库（见 `.gitignore`）。

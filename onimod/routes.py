@@ -39,11 +39,15 @@ def api_workshop_search():
 
     # 无 Key / 接口不可用 → 降级为示例数据（前端另有提示条）
     mods = get_mock_mods(keyword, per_page)
+    reason = str(result.get("error") or "")
+    if reason == "missing_api_key":
+        notice = ("未配置 Steam API Key，当前显示示例数据。获取地址: "
+                  "https://steamcommunity.com/dev/apikey")
+    else:
+        notice = f"创意工坊接口暂时连不上（{reason[:90]}），页面已切换为示例数据，稍后重试即可。"
     return jsonify({
         "success": True, "total": len(mods), "page": 1, "per_page": per_page,
-        "mods": mods, "mock": True,
-        "notice": "未配置 Steam API Key，当前显示示例数据。获取地址: "
-                  "https://steamcommunity.com/dev/apikey",
+        "mods": mods, "mock": True, "error": reason, "notice": notice,
     })
 
 
@@ -52,8 +56,12 @@ def api_workshop_popular():
     limit = int(request.args.get("limit", 20))
     result = SteamWorkshopAPI.get_popular_mods(limit)
     if not result.get("success") or not result.get("mods"):
+        reason = str(result.get("error") or "empty_response")
+        notice = ("未配置 Steam API Key，当前显示示例数据。"
+                  if reason == "missing_api_key"
+                  else f"创意工坊接口暂时连不上（{reason[:90]}），页面已切换为示例数据。")
         result = {"success": True, "mods": get_mock_mods("", limit), "mock": True,
-                  "notice": "未配置 Steam API Key，当前显示示例数据。"}
+                  "error": reason, "notice": notice}
     return jsonify(result)
 
 

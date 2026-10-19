@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import re
+import time
 
 import requests
 
@@ -43,6 +44,40 @@ class SteamWorkshopAPI:
           "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
     # ---------------------------------------------------------------- helpers
+    RETRIES = 3
+
+    @staticmethod
+    def _request(method, url, *, params=None, data=None, proxies=None,
+                 timeout=12, retries=None, headers=None, max_total=20.0):
+        """带重试的 HTTP 请求（返回 response，重试耗尽则抛异常）。
+
+        校园网/家庭网络新建连接偶发丢包（实测约 15% 丢 SYN），单次失败就让界面
+        掉回「示例数据」体验很差，所以对连接异常与 429/5xx 都退避重试。
+        ``max_total`` 是整体时间预算，避免前端一直转圈。
+        """
+        attempts = SteamWorkshopAPI.RETRIES if retries is None else retries
+        merged = {"User-Agent": SteamWorkshopAPI.UA, "Accept": "application/json"}
+        if headers:
+            merged.update(headers)
+
+        started = time.time()
+        last_error = "request failed"
+        for attempt in range(attempts):
+            try:
+                budget = max(2.0, min(timeout, max_total - (time.time() - started)))
+                resp = requests.request(method, url, params=params, data=data,
+                                        headers=merged, timeout=budget, proxies=proxies)
+                if resp.status_code != 429 and resp.status_code < 500:
+                    return resp
+                last_error = f"HTTP {resp.status_code}"
+            except requests.RequestException as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+            if attempt < attempts - 1 and (time.time() - started) < max_total:
+                time.sleep(min(0.6 * (2 ** attempt), 2.0))
+            else:
+                break
+        raise RuntimeError(last_error)
+
     @staticmethod
     def _get_api_key():
         """Steam Web API Key：config.json 优先，其次环境变量 STEAM_WEB_API_KEY。"""
@@ -102,11 +137,9 @@ class SteamWorkshopAPI:
             if category and category in SteamWorkshopAPI.TAG_MAP:
                 params["requiredtags"] = SteamWorkshopAPI.TAG_MAP[category]
 
-            resp = requests.get(
-                "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/",
-                params=params,
-                headers={"User-Agent": SteamWorkshopAPI.UA, "Accept": "application/json"},
-                timeout=10, proxies=proxies)
+            resp = SteamWorkshopAPI._request(
+                "GET", "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/",
+                params=params, proxies=proxies, timeout=12)
             data = resp.json()
             response = data.get("response")
             if response is not None:
@@ -120,7 +153,7 @@ class SteamWorkshopAPI:
                     "source": "steam_api",
                 }
         except Exception as exc:  # 网络 / 解析异常 → 上层降级
-            return {"success": False, "error": str(exc)}
+            return {"success": False, "error": str(exc), "error_kind": "network"}
 
         return {"success": False, "error": "empty_response"}
 
@@ -162,12 +195,10 @@ class SteamWorkshopAPI:
         for index, mod_id in enumerate(ids):
             data[f"publishedfileids[{index}]"] = str(mod_id)
         try:
-            resp = requests.post(
-                "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/",
-                data=data,
-                headers={"User-Agent": SteamWorkshopAPI.UA,
-                         "Content-Type": "application/x-www-form-urlencoded"},
-                timeout=15, proxies=proxy)
+            resp = SteamWorkshopAPI._request(
+                "POST", "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/",
+                data=data, proxies=proxy, timeout=15,
+                headers={"Content-Type": "application/x-www-form-urlencoded"})
             return resp.json().get("response", {}).get("publishedfiledetails") or []
         except Exception:
             return []
@@ -215,9 +246,9 @@ class SteamWorkshopAPI:
         # 降级：解析社区页面（Steam 页面改版即可能失效）
         try:
             community_url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={mod_id}&l=schinese"
-            html = requests.get(community_url,
-                                headers={"User-Agent": SteamWorkshopAPI.UA},
-                                timeout=15, proxies=proxies).text
+            html = SteamWorkshopAPI._request(
+                "GET", community_url, proxies=proxies, timeout=15,
+                headers={"Accept": "text/html"}).text
 
             desc_match = re.search(
                 r'<div class="workshopItemDescription"[^>]*id="highlightContent"[^>]*>(.*?)</div>',
