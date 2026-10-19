@@ -17,6 +17,7 @@ from pathlib import Path
 import requests
 
 from .config import DATA_DIR, load_config
+from .steam_api import SteamWorkshopAPI
 from .utils import safe_extract_zip, sanitize_filename
 
 
@@ -178,20 +179,12 @@ class DownloadManager:
         return urls
 
     def _resolve_steam_file_url(self, mod_id):
-        """通过官方 GetPublishedFileDetails 拿公开直链 ``file_url``。"""
-        try:
-            resp = requests.post(
-                "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/",
-                data={"itemcount": 1, "publishedfileids[0]": mod_id},
-                headers={"User-Agent": "ONIModManager",
-                         "Content-Type": "application/x-www-form-urlencoded"},
-                timeout=10)
-            details = resp.json().get("response", {}).get("publishedfiledetails") or []
-            if details:
-                return details[0].get("file_url") or None
-        except Exception:
-            pass
-        return None
+        """通过官方 GetPublishedFileDetails 拿公开直链 ``file_url``。
+
+        直接复用 ``SteamWorkshopAPI.resolve_file_url``（POST + 重试 + 连接复用），
+        避免这里再维护一份实现。
+        """
+        return SteamWorkshopAPI.resolve_file_url(mod_id)
 
     def _download_file(self, url, save_path, task, chunk_size=8192):
         config = load_config()
@@ -208,8 +201,21 @@ class DownloadManager:
             "Referer": f"https://steamcommunity.com/sharedfiles/filedetails/?id={task['mod_id']}",
         }
 
-        response = requests.get(url, stream=True, timeout=30, proxies=proxies, headers=headers)
-        response.raise_for_status()
+        # 新建连接偶发丢包，整段下载前先重试几次，别让一次握手失败就判下载失败
+        response = None
+        last_error = None
+        for attempt in range(3):
+            try:
+                response = requests.get(url, stream=True, timeout=30,
+                                        proxies=proxies, headers=headers)
+                response.raise_for_status()
+                break
+            except requests.RequestException as exc:
+                last_error = exc
+                if attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
+        if response is None:
+            raise last_error
 
         total_size = int(response.headers.get("content-length", 0))
         task["size"] = total_size
